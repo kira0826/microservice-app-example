@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  auth-api:
+    build:
+      context: ./auth-api/
+      dockerfile: Dockerfile
+
+      #TODO: must implement arg to pass env variables from github secrets.
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      USERS_API_ADDRESS: ${USERS_API_ADDRESS}
+      AUTH_API_PORT: ${AUTH_API_PORT}
+    ports:
+      - "${AUTH_API_PORT}:${AUTH_API_PORT}"
+
+    networks:
+          - app-network
+
+networks:
+  app-network:
+    driver: bridge
