@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   auth-api:
     build:
@@ -11,12 +9,26 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       USERS_API_ADDRESS: ${USERS_API_ADDRESS}
       AUTH_API_PORT: ${AUTH_API_PORT}
+      
     ports:
       - "${AUTH_API_PORT}:${AUTH_API_PORT}"
-
     networks:
-          - app-network
+          - users-auth
+
+
+
+  users-api:
+    build:
+      context: ./users-api/
+      dockerfile: Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SERVER_PORT: ${USERS_API_PORT}
+    ports:
+      - "${USERS_API_PORT}:${USERS_API_PORT}"
+    networks:
+      - users-auth
 
 networks:
-  app-network:
+  users-auth:
     driver: bridge
