@@ -12,7 +12,7 @@ const ROLE_ADMIN = 'ADMIN'
 
 /**
 * Auth Plugin
-*
+* 
 * (see https://vuejs.org/v2/guide/plugins.html for more info on Vue.js plugins)
 *
 * Handles login and token authentication using OAuth2.
