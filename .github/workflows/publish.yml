@@ -61,6 +61,9 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.matrix != '{\"include\":[]}'
     runs-on: ubuntu-latest
+    environment: microservicesEnv
+    env: 
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
     strategy:
       matrix: ${{fromJson(needs.detect-changes.outputs.matrix)}}
 

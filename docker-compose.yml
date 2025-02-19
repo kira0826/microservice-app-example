@@ -2,7 +2,7 @@ services:
 
   #-------------------------User-auth context-------------------------
 
-  #Useful to visualize and analize microservices request tracking.
+  #Useful to visualize and analize microservices request
   zipkin:
     image: openzipkin/zipkin
     ports:
@@ -15,7 +15,7 @@ services:
 
   auth-api:
     build:
-      context: ./auth-api/
+      context: ./auth-api/  
       dockerfile: Dockerfile
 
       #TODO: must implement arg to pass env variables from github secrets.
