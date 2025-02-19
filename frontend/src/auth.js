@@ -5,7 +5,8 @@ import decode from 'jwt-decode'
 
 /**
  * @var{string} LOGIN_URL The endpoint for logging in. This endpoint should be proxied by Webpack dev server
- *    and maybe nginx in production (cleaner calls and avoids CORS issues).
+ *    and maybe nginx in production (cleaner calls and avoids CORS issues). Notice we add "/auth-api/" prefix
+ *    to redirect request with best practices.
  */
 const LOGIN_URL = window.location.protocol + '//' + window.location.host + '/auth-api/login'
 const ROLE_ADMIN = 'ADMIN'

@@ -1,3 +1,4 @@
+#We ensure node version specified.
 FROM node:8.17
 
 WORKDIR /app

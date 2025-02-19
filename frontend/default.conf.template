@@ -10,18 +10,21 @@ server {
     }
 
     location /auth-api/ {
+
+        #We must add "/" at the end to avoid the use of "/auth-api" prefix
+
         proxy_pass ${AUTH_API_ADDRESS}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
 
-        # Configuración CORS
+        # CORS configuration
         add_header 'Access-Control-Allow-Origin' '*';
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
         
-        # Manejar preflight requests
+        # Preflight requests manager
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -34,18 +37,23 @@ server {
     }
 
     location /todos-api/ {
+
+        #Define URL based on env varibles.
+
+        #We must add "/" at the end to avoid the use of "/auth-api" prefix
+        
         proxy_pass ${TODOS_API_ADDRESS}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
 
-            # Configuración CORS
+        # CORS configuration
         add_header 'Access-Control-Allow-Origin' '*';
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
         
-        # Manejar preflight requests
+        # Management of preflight requests, and define allowed headers
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -56,8 +64,6 @@ server {
             return 204;
         }
     }
-
-    
 
     location ~* \.(?:css|js|json|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico)$ {
         expires 1y;

@@ -2,6 +2,7 @@ services:
 
   #-------------------------User-auth context-------------------------
 
+  #Useful to visualize and analize microservices request tracking.
   zipkin:
     image: openzipkin/zipkin
     ports:
