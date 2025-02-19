@@ -1,6 +1,5 @@
 name: Publish to GHCR
 on:
-
   push:
     branches:
       - master
@@ -12,6 +11,7 @@ on:
       - 'users-api/**'
       - '.github/workflows/**'
   workflow_dispatch:
+
 permissions:
   packages: write
   contents: read
@@ -20,7 +20,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     environment: microservicesEnv
-    env: 
+    env:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     strategy:
       matrix:
@@ -63,8 +63,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
           tags: |
             type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}
-            type=raw,value={{ date 'YYYYMMDD-HHmmss' }}-${{ matrix.type }}
-            type=sha,prefix=${{ matrix.type }}-
+            type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
+            type=sha
           labels: |
             org.opencontainers.image.title=${{ matrix.service }}
             org.opencontainers.image.description=${{ matrix.type }} service for microservices architecture
