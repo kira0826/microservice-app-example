@@ -1,6 +1,10 @@
 # Fase de construcción
 FROM node:8.17.0-slim as builder
 
+# Define el argumento y la variable de entorno
+ARG VUE_APP_ZIPKIN_URL
+ENV VUE_APP_ZIPKIN_URL=$VUE_APP_ZIPKIN_URL
+
 WORKDIR /app
 
 # Copia package.json e instala dependencias
@@ -10,7 +14,6 @@ RUN npm install npm@6.13.4 -g && \
 
 # Copia el código fuente y construye
 COPY . .
-
 RUN npm run build
 
 # Fase de producción con Nginx
@@ -18,10 +21,10 @@ FROM nginx:alpine
 
 # Instala gettext (para usar envsubst)
 RUN apk add --no-cache gettext
-
 RUN rm -rf /etc/nginx/conf.d/*
 COPY default.conf.template /etc/nginx/conf.d/default.conf.template
 COPY entrypoint.sh /entrypoint.sh
 COPY --from=builder /app/dist /usr/share/nginx/html
 RUN chmod +x /entrypoint.sh
+
 ENTRYPOINT ["/entrypoint.sh"]

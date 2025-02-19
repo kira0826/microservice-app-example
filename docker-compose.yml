@@ -2,6 +2,16 @@ services:
 
   #-------------------------User-auth context-------------------------
 
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "${ZIPKIN_PORT}:${ZIPKIN_PORT}"
+    environment:
+      - CORS_ALLOWED_ORIGINS=*
+    networks:
+      - logger
+      - users-auth
+
   auth-api:
     build:
       context: ./auth-api/
@@ -43,6 +53,7 @@ services:
       - "${REDIS_PORT}:${REDIS_PORT}"
     networks:
       - logger
+      
 
   logg-processor:
     build:
@@ -83,10 +94,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VUE_APP_ZIPKIN_URL="${ZIPKIN_URL}"
 
     environment:
         AUTH_API_ADDRESS: "http://auth-api:${AUTH_API_PORT}"
         TODOS_API_ADDRESS: "http://todos-api:${TODO_API_PORT}"
+        VUE_APP_ZIPKIN_URL: "${ZIPKIN_URL}"
     ports:
       - "80:80"
     networks:
