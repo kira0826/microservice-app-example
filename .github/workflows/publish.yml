@@ -52,19 +52,27 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Corregido el paso de lectura de versión
       - name: Read version file
         id: version
-        run: echo "version=$(cat ${matrix.context}/VERSION)" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          if [ -f "${matrix.context}/VERSION" ]; then
+            VERSION=$(cat "${matrix.context}/VERSION")
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "version=v1.0.0" >> $GITHUB_OUTPUT
+          fi
 
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
           tags: |
-            type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}-${{ matrix.service }}
-            type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
-            type=sha
+            type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}
+            type=raw,value=latest
+            type=schedule,pattern={{date 'YYYYMMDD'}}
           labels: |
             org.opencontainers.image.title=${{ matrix.service }}
             org.opencontainers.image.description=${{ matrix.type }} service for microservices architecture
