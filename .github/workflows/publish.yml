@@ -1,5 +1,6 @@
 name: Publish to GHCR
 on:
+
   push:
     branches:
       - master
@@ -10,7 +11,7 @@ on:
       - 'todos-api/**'
       - 'users-api/**'
       - '.github/workflows/**'
-
+  workflow_dispatch:
 permissions:
   packages: write
   contents: read
@@ -27,23 +28,18 @@ jobs:
           - service: auth-api
             type: backend
             context: ./auth-api
-            version: $(cat auth-api/VERSION)  
           - service: frontend
             type: frontend
             context: ./frontend
-            version: $(cat frontend/VERSION)
           - service: log-processor
             type: backend
             context: ./log-message-processor
-            version: $(cat log-message-processor/VERSION)
           - service: todos-api
             type: backend
             context: ./todos-api
-            version: $(cat todos-api/VERSION)
           - service: users-api
             type: backend
             context: ./users-api
-            version: $(cat users-api/VERSION)
 
     steps:
       - name: Checkout
@@ -56,19 +52,23 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read version file
+        id: version
+        run: echo "version=$(cat ${matrix.context}/VERSION)" >> $GITHUB_OUTPUT
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
           tags: |
-            type=raw,value=${{ matrix.version }}-${{ matrix.type }}
+            type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}
             type=raw,value={{ date 'YYYYMMDD-HHmmss' }}-${{ matrix.type }}
             type=sha,prefix=${{ matrix.type }}-
           labels: |
             org.opencontainers.image.title=${{ matrix.service }}
             org.opencontainers.image.description=${{ matrix.type }} service for microservices architecture
-            org.opencontainers.image.version=${{ matrix.version }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
             com.docker.image.environment.tier=${{ matrix.type }}
 
       - name: Build and push
