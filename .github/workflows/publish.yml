@@ -64,7 +64,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
           tags: |
-            type=raw,value=${{ env.version }}-${{ matrix.type }}           
+            type=raw,value=${{ env.version }}-${{ matrix.type }}-$(date +'%Y%m%d-%H%M%S')
             type=sha
           labels: |
             org.opencontainers.image.title=${{ matrix.service }}
