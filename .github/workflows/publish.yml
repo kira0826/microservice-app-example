@@ -1,5 +1,6 @@
 name: Publish to GHCR
 on:
+
   push:
     branches:
       - master
@@ -10,59 +11,35 @@ on:
       - 'todos-api/**'
       - 'users-api/**'
       - '.github/workflows/**'
-
+  workflow_dispatch:
 permissions:
   packages: write
   contents: read
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Get changed directories
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          files: |
-            auth-api/**
-            frontend/**
-            log-message-processor/**
-            todos-api/**
-            users-api/**
-
-      - name: Set matrix
-        id: set-matrix
-        run: |
-          # Preparar la matriz basada en los directorios cambiados
-          SERVICES="["
-          if [[ ${{ contains(steps.changed-files.outputs.all_changed_files, 'auth-api/') }} == true ]]; then
-            SERVICES="$SERVICES{\"service\":\"auth-api\",\"type\":\"backend\",\"context\":\"./auth-api\",\"version\":\"$(cat auth-api/VERSION)\"},"
-          fi
-          if [[ ${{ contains(steps.changed-files.outputs.all_changed_files, 'frontend/') }} == true ]]; then
-            SERVICES="$SERVICES{\"service\":\"frontend\",\"type\":\"frontend\",\"context\":\"./frontend\",\"version\":\"$(cat frontend/VERSION)\"},"
-          fi
-          if [[ ${{ contains(steps.changed-files.outputs.all_changed_files, 'log-message-processor/') }} == true ]]; then
-            SERVICES="$SERVICES{\"service\":\"log-processor\",\"type\":\"backend\",\"context\":\"./log-message-processor\",\"version\":\"$(cat log-message-processor/VERSION)\"},"
-          fi
-          if [[ ${{ contains(steps.changed-files.outputs.all_changed_files, 'todos-api/') }} == true ]]; then
-            SERVICES="$SERVICES{\"service\":\"todos-api\",\"type\":\"backend\",\"context\":\"./todos-api\",\"version\":\"$(cat todos-api/VERSION)\"},"
-          fi
-          if [[ ${{ contains(steps.changed-files.outputs.all_changed_files, 'users-api/') }} == true ]]; then
-            SERVICES="$SERVICES{\"service\":\"users-api\",\"type\":\"backend\",\"context\":\"./users-api\",\"version\":\"$(cat users-api/VERSION)\"},"
-          fi
-          SERVICES="${SERVICES%,}]"  # Eliminar la última coma y cerrar el array
-          echo "matrix={\"include\":$SERVICES}" >> $GITHUB_OUTPUT
-
   build-and-push:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.matrix != '{\"include\":[]}'
     runs-on: ubuntu-latest
+    environment: microservicesEnv
+    env: 
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     strategy:
-      matrix: ${{fromJson(needs.detect-changes.outputs.matrix)}}
+      matrix:
+        include:
+          - service: auth-api
+            type: backend
+            context: ./auth-api
+          - service: frontend
+            type: frontend
+            context: ./frontend
+          - service: log-processor
+            type: backend
+            context: ./log-message-processor
+          - service: todos-api
+            type: backend
+            context: ./todos-api
+          - service: users-api
+            type: backend
+            context: ./users-api
 
     steps:
       - name: Checkout
@@ -75,21 +52,23 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read version file
+        id: version
+        run: echo "version=$(cat ${matrix.context}/VERSION)" >> $GITHUB_OUTPUT
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
           tags: |
-            type=raw,value=${{ matrix.version }}-${{ matrix.type }}-dev
-            type=raw,value=${{ matrix.version }}-${{ matrix.type }}-prod
-            type=raw,value=${{ matrix.type }}-latest
-            type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}-${{ matrix.type }}
+            type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}
+            type=raw,value={{ date 'YYYYMMDD-HHmmss' }}-${{ matrix.type }}
             type=sha,prefix=${{ matrix.type }}-
           labels: |
             org.opencontainers.image.title=${{ matrix.service }}
             org.opencontainers.image.description=${{ matrix.type }} service for microservices architecture
-            org.opencontainers.image.version=${{ matrix.version }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
             com.docker.image.environment.tier=${{ matrix.type }}
 
       - name: Build and push
