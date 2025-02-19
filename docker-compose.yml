@@ -1,0 +1,124 @@
+services:
+
+  #-------------------------User-auth context-------------------------
+
+  #Useful to visualize and analize microservices request tracking.
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "${ZIPKIN_PORT}:${ZIPKIN_PORT}"
+    environment:
+      - CORS_ALLOWED_ORIGINS=*
+    networks:
+      - logger
+      - users-auth
+
+  auth-api:
+    build:
+      context: ./auth-api/
+      dockerfile: Dockerfile
+
+      #TODO: must implement arg to pass env variables from github secrets.
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      USERS_API_ADDRESS: ${USERS_API_ADDRESS}
+      AUTH_API_PORT: ${AUTH_API_PORT}
+      
+    ports:
+      - "${AUTH_API_PORT}:${AUTH_API_PORT}"
+    networks:
+          - users-auth
+    depends_on:
+      - users-api
+
+  users-api:
+    build:
+      context: ./users-api/
+      dockerfile: Dockerfile
+    environment:
+      #TODO: must implement arg to pass env variables from github secrets.
+      JWT_SECRET: ${JWT_SECRET}
+      SERVER_PORT: ${USERS_API_PORT}
+    ports:
+      - "${USERS_API_PORT}:${USERS_API_PORT}"
+    networks:
+      - users-auth
+
+
+
+#-------------------------Logs and Messaging-------------------------
+  
+  redis:
+    image: redis:7.0
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - logger
+      
+
+  logg-processor:
+    build:
+      context: ./log-message-processor/
+      dockerfile: Dockerfile
+    environment:
+      #TODO: must implement arg to pass env variables from github secrets.
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_CHANNEL: "${REDIS_CHANNEL}"
+    networks:
+      - logger
+    depends_on:
+      - redis
+
+  todos-api:
+    build:
+      context: ./todos-api/
+      dockerfile: Dockerfile
+    environment:
+      #TODO: must implement arg to pass env variables from github secrets.
+      JWT_SECRET: ${JWT_SECRET}
+      TODO_API_PORT: ${TODO_API_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_CHANNEL: ${REDIS_CHANNEL}
+    ports:
+      - "${TODO_API_PORT}:${TODO_API_PORT}"
+    networks:
+      - logger
+    depends_on:
+      - auth-api
+
+#-------------------------Frontend-------------------------
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VUE_APP_ZIPKIN_URL="${ZIPKIN_URL}"
+
+    environment:
+        AUTH_API_ADDRESS: "http://auth-api:${AUTH_API_PORT}"
+        TODOS_API_ADDRESS: "http://todos-api:${TODO_API_PORT}"
+        VUE_APP_ZIPKIN_URL: "${ZIPKIN_URL}"
+    ports:
+      - "80:80"
+    networks:
+      - users-auth
+      - logger
+    depends_on:
+      - auth-api
+      - todos-api
+
+
+#-------------------------Networks-------------------------
+
+networks:
+  users-auth:
+    driver: bridge
+  logger:
+    driver: bridge
+
+
+  
