@@ -60,9 +60,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
+          images: ghcr.io/${{ github.repository_owner }}/
           tags: |
-            type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}
+            type=raw,value=${{ steps.version.outputs.version }}-${{ matrix.type }}-${{ matrix.service }}
             type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
             type=sha
           labels: |
