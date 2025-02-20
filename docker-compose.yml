@@ -56,7 +56,7 @@ services:
       - logger
       
 
-  logg-processor:
+  logg-processor: 
     build:
       context: ./log-message-processor/
       dockerfile: Dockerfile
